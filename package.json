@@ -3,6 +3,7 @@
   "displayName": "VS Code ⇄ Gitingest",
   "description": "Quickly launch repositories in Gitingest.",
   "version": "0.0.1",
+  "publisher": "iamshreydxv",
   "engines": {
     "vscode": "^1.54.0"
   },
