@@ -1,42 +1,47 @@
 import * as vscode from 'vscode';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { GitService } from './services/gitService';
+import { GitIngestService } from './services/gitIngestService';
+import { GitUrlParser } from './utils/url';
+import { GitHubService } from './services/githubService';
 
-const execAsync = promisify(exec);
-
-export async function activate(context: vscode.ExtensionContext) {
-	let disposable = vscode.commands.registerCommand('vscode-gitingest.openInGitIngest', async () => {
-		try {
-			const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-			if (!workspaceFolder) {
-				throw new Error('No workspace folder found');
-			}
-
-			const { stdout: remoteUrl } = await execAsync('git remote get-url origin', {
-				cwd: workspaceFolder.uri.fsPath
-			});
-
-			const { stdout: branchName } = await execAsync('git rev-parse --abbrev-ref HEAD', {
-				cwd: workspaceFolder.uri.fsPath
-			});
-
-			const match = remoteUrl.trim().match(/github\.com[:/]([^/]+)\/([^/.]+)(?:\.git)?$/);
-			if (!match) {
-				throw new Error('Not a valid GitHub repository');
-			}
-
-			const [, username, repository] = match;
-			const currentBranch = branchName.trim();
-
-			const gitIngestUrl = `https://gitingest.com/${username}/${repository}/tree/${currentBranch}`;
-
-			vscode.env.openExternal(vscode.Uri.parse(gitIngestUrl));
-
-			vscode.window.showInformationMessage(`Opening repository (${currentBranch} branch) in GitIngest`);
-		} catch (error: any) {
-			vscode.window.showErrorMessage(`Failed to open in GitIngest: ${error.message}`);
-		}
-	});
+export async function activate(context: vscode.ExtensionContext): Promise<void> {
+	const disposable = vscode.commands.registerCommand(
+		'vscode-gitingest.openInGitIngest',
+		handleOpenInGitIngest
+	);
 
 	context.subscriptions.push(disposable);
 }
+
+async function handleOpenInGitIngest(): Promise<void> {
+	try {
+		const repository = await GitService.getCurrentRepository();
+		const remoteUrl = await GitService.getOriginUrl(repository);
+		const branch = GitService.getCurrentBranch(repository);
+
+		const { username, repository: repoName } = GitUrlParser.parseRepositoryInfo(remoteUrl);
+
+		// Check if repository is public
+		const isPublic = await GitHubService.isPublicRepository(username, repoName);
+
+		if (!isPublic) {
+			throw new Error('GitIngest does not support private repositories');
+		}
+
+		const gitIngestUrl = GitIngestService.constructUrl(username, repoName, branch);
+		await vscode.env.openExternal(vscode.Uri.parse(gitIngestUrl));
+
+		vscode.window.showInformationMessage(
+			`Opening repository (${branch} branch) in GitIngest`
+		);
+	} catch (error) {
+		vscode.window.showErrorMessage(
+			`Failed to open in GitIngest: ${error instanceof Error ? error.message : 'Unknown error'}`
+		);
+	}
+}
+
+/*
+ * Copyright (c) 2025 Shrey Purohit.
+ * This code is licensed under the MIT License.
+ */
