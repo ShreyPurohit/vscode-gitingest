@@ -1,7 +1,7 @@
 {
   "name": "vscode-gitingest",
-  "displayName": "vscode-gitingest",
-  "description": "Quickly open GitHub repositories in GitIngest.",
+  "displayName": "VS Code ⇄ Gitingest",
+  "description": "Quickly launch repositories in Gitingest.",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.54.0"

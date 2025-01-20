@@ -2,7 +2,7 @@
 
 A VS Code extension that allows you to quickly open GitHub repositories in GitIngest.
 
-<img src="./assets/vscode-gitingest.gif" alt="Open In GitIngest" style="border: 4px solid rgba(255, 255, 255, 0.9); border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); ">
+<img src="./assets/vscode-gitingest.gif" alt="Open In GitIngest" style="border: 4px solid rgb(0, 0, 0); border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); ">
 
 ## Features
 
